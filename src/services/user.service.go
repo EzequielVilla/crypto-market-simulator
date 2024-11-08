@@ -44,7 +44,6 @@ func (u *UserService) BuyCrypto(buyData models.UserBuy, userId uuid.UUID, wallet
 	if err != nil {
 		return err
 	}
-
 	cryptoId, err := u.cryptoService.UpdateValuesWhenBuy(symbol, actualValue)
 	if err != nil {
 		return err
@@ -54,7 +53,6 @@ func (u *UserService) BuyCrypto(buyData models.UserBuy, userId uuid.UUID, wallet
 	if err != nil {
 		return err
 	}
-
 	userMoney := userAccount.Money
 	if userMoney < symbolCost {
 		return errors.New("USER_MONEY_LOWER_THAN_COST_OF_CRYPTO")
@@ -63,13 +61,15 @@ func (u *UserService) BuyCrypto(buyData models.UserBuy, userId uuid.UUID, wallet
 	if err != nil {
 		return err
 	}
-	// TODO PATCH THE MONEY IN THE USER ACCOUNT AFTER BUY
-	// TODO Check if the user has that cryptoSymbol. If it does, only have to update the value in the table crypto_owning. If is the first time must create the register in both tables
-	err = u.cryptoOwningService.FirstBuy(cryptoId, walletId, quantityAfterFee)
+	err = u.cryptoOwningService.Buy(cryptoId, walletId, quantityAfterFee)
 	if err != nil {
 		return err
 	}
-
+	newMoneyInAccount := userAccount.Money - symbolCost
+	err = u.repository.UpdateMoney(userId, newMoneyInAccount)
+	if err != nil {
+		return err
+	}
 	return nil
 }
 

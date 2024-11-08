@@ -16,10 +16,24 @@ type IUserRepository interface {
 	FindOneByID(id uuid.UUID) (models.UserDTO, error)
 	Deposit(userId uuid.UUID, amount float64) error
 	Withdraw(userId uuid.UUID, amount float64) error
+	UpdateMoney(userId uuid.UUID, amount float64) error
 }
 
 type UserRepository struct {
 	db *sqlx.DB
+}
+
+func (u *UserRepository) UpdateMoney(userId uuid.UUID, amount float64) error {
+	var query = `
+		UPDATE users SET money = $1 WHERE id = $2
+	`
+
+	err := u.db.QueryRow(query, amount, userId.String()).Err()
+	if err != nil {
+		fmt.Printf("ERROR_UPDATE_MONEY: %v \n", err)
+		return errors.New("ERROR_UPDATE_MONEY")
+	}
+	return nil
 }
 
 func (u *UserRepository) Withdraw(userId uuid.UUID, amount float64) error {

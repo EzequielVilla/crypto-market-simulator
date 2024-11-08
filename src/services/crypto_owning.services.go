@@ -6,7 +6,7 @@ import (
 )
 
 type ICryptoOwningService interface {
-	FirstBuy(cryptoId uuid.UUID, walletId uuid.UUID, quantity float64) error
+	Buy(cryptoId uuid.UUID, walletId uuid.UUID, quantity float64) error
 }
 
 type CryptoOwningService struct {
@@ -14,14 +14,23 @@ type CryptoOwningService struct {
 	walletCryptoService IWalletCryptoService
 }
 
-func (c *CryptoOwningService) FirstBuy(cryptoId uuid.UUID, walletId uuid.UUID, quantity float64) error {
-	cryptoOwningId, err := c.repository.Create(cryptoId, quantity)
+func (c *CryptoOwningService) Buy(cryptoId uuid.UUID, walletId uuid.UUID, quantity float64) error {
+	cryptoOwningId, err := c.walletCryptoService.CheckIfHasCrypto(walletId, cryptoId)
 	if err != nil {
 		return err
 	}
-	err = c.walletCryptoService.CreateWithCryptoOwningId(walletId, cryptoOwningId)
-	if err != nil {
-		return err
+	if cryptoOwningId != uuid.Nil {
+		err = c.repository.UpdateBuy(cryptoOwningId, quantity)
+		// update
+	} else {
+		newCryptoOwningId, errCreate := c.repository.Create(cryptoId, quantity)
+		if errCreate != nil {
+			return errCreate
+		}
+		errCreate = c.walletCryptoService.CreateWithCryptoOwningId(walletId, newCryptoOwningId)
+		if errCreate != nil {
+			return errCreate
+		}
 	}
 	return nil
 }
