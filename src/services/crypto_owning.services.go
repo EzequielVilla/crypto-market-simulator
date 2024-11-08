@@ -1,12 +1,14 @@
 package services
 
 import (
+	"crypto-market-simulator/src/models"
 	"crypto-market-simulator/src/repositories"
 	"github.com/google/uuid"
 )
 
 type ICryptoOwningService interface {
 	Buy(cryptoId uuid.UUID, walletId uuid.UUID, quantity float64) error
+	BalanceWithTotal(walletId uuid.UUID) (models.CryptoBalance, error)
 }
 
 type CryptoOwningService struct {
@@ -14,8 +16,12 @@ type CryptoOwningService struct {
 	walletCryptoService IWalletCryptoService
 }
 
+func (c *CryptoOwningService) BalanceWithTotal(walletId uuid.UUID) (models.CryptoBalance, error) {
+	return c.repository.GetBalanceWithTotal(walletId)
+}
+
 func (c *CryptoOwningService) Buy(cryptoId uuid.UUID, walletId uuid.UUID, quantity float64) error {
-	cryptoOwningId, err := c.walletCryptoService.CheckIfHasCrypto(walletId, cryptoId)
+	cryptoOwningId, err := c.repository.CheckIfHasCrypto(walletId, cryptoId)
 	if err != nil {
 		return err
 	}

@@ -13,9 +13,9 @@ type UserAmount struct {
 	Amount float64 `json:"amount"`
 }
 
-// Balance gives me all the currencies * by the currency price plus the amount in the wallet
+// BalanceWithTotal gives me all the currencies * by the currency price plus the amount in the wallet
 // AllCurrencies gives me information about the user tenure.
-// GetTotal maybe it's equal to Balance
+// GetTotal maybe it's equal to BalanceWithTotal
 // TODO Maybe i need a list of users to select which i will withdraw
 // TODO Transfer it's going to be by email or userId.
 
@@ -23,8 +23,8 @@ type IUserController interface {
 	Deposit(w http.ResponseWriter, r *http.Request)
 	Withdraw(w http.ResponseWriter, r *http.Request)
 	BuyCrypto(w http.ResponseWriter, r *http.Request)
+	Balance(w http.ResponseWriter, r *http.Request)
 	// SellCrypto(w http.ResponseWriter, r *http.Request)
-	// Balance(w http.ResponseWriter, r *http.Request)
 	// GetAllCurrencies(w http.ResponseWriter, r *http.Request)
 	// GetTotal(w http.ResponseWriter, r *http.Request)
 	// Transfer(w http.ResponseWriter, r *http.Request)
@@ -32,6 +32,26 @@ type IUserController interface {
 
 type UserController struct {
 	service services.IUserService
+}
+
+func (u *UserController) Balance(w http.ResponseWriter, r *http.Request) {
+	walletId, ok := r.Context().Value("walletId").(uuid.UUID)
+	if !ok {
+		http.Error(w, "ERROR_GETTING_DATA_FROM_TOKEN", http.StatusInternalServerError)
+	}
+	balance, err := u.service.BalanceWithTotal(walletId)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+	}
+	result := lib.ResponseHandler("BALANCE_AND_TOTAL", nil, balance)
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	err = json.NewEncoder(w).Encode(result)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
 }
 
 func (u *UserController) BuyCrypto(w http.ResponseWriter, r *http.Request) {

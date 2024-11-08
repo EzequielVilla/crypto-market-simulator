@@ -15,12 +15,18 @@ type IUserService interface {
 	Deposit(userId uuid.UUID, amount float64) error
 	Withdraw(userId uuid.UUID, amount float64) error
 	BuyCrypto(buyData models.UserBuy, userId uuid.UUID, walletId uuid.UUID) error
+	BalanceWithTotal(walletId uuid.UUID) (models.CryptoBalance, error)
 }
 type UserService struct {
-	repository          repositories.IUserRepository
-	cryptoService       ICryptoService
-	systemService       ISystemService
+	repository    repositories.IUserRepository
+	cryptoService ICryptoService
+	systemService ISystemService
+	// maybe change this an call wallet instead of cryptoOwning
 	cryptoOwningService ICryptoOwningService
+}
+
+func (u *UserService) BalanceWithTotal(walletId uuid.UUID) (models.CryptoBalance, error) {
+	return u.cryptoOwningService.BalanceWithTotal(walletId)
 }
 
 /*
@@ -72,7 +78,6 @@ func (u *UserService) BuyCrypto(buyData models.UserBuy, userId uuid.UUID, wallet
 	}
 	return nil
 }
-
 func (u *UserService) Withdraw(userId uuid.UUID, amount float64) error {
 	return u.repository.Withdraw(userId, amount)
 }

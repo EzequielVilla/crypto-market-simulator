@@ -5,6 +5,16 @@ import (
 	"time"
 )
 
+type CryptoDataQuantityValues struct {
+	CryptoData       Crypto  `json:"crypto"`
+	Quantity         float64 `json:"quantity"`
+	ValuePerQuantity float64 `json:"valuePerQuantity"`
+}
+type CryptoBalance struct {
+	CryptoDataQuantity []CryptoDataQuantityValues `json:"cryptoDataQuantity"`
+	Total              float64                    `json:"total"`
+}
+
 type CryptosOwningDTO struct {
 	Id           uuid.UUID          `json:"id" db:"id"`
 	CryptoID     uuid.UUID          `json:"cryptoID" db:"crypto_id"`
