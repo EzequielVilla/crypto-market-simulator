@@ -15,7 +15,7 @@ type UserDTO struct {
 	DeletedAt *time.Time `json:"deleted_at,omitempty" db:"deleted_at"`
 	Wallet    *WalletDTO `json:"wallet,omitempty"`
 }
-type UserBuy struct {
+type UserBuySell struct {
 	Symbol         string  `json:"symbol"`
 	SymbolQuantity float64 `json:"symbolQuantity"`
 }

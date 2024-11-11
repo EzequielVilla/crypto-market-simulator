@@ -20,8 +20,8 @@ func WalletCryptoSchema() string {
 		CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 		CREATE TABLE IF NOT EXISTS wallet_cryptos (
 		    id uuid DEFAULT uuid_generate_v4() PRIMARY KEY UNIQUE,
-		    fk_wallet_id uuid REFERENCES cryptos_owning(id) NOT NULL,
-			fk_crypto_owning_id uuid REFERENCES crypto(id) NOT NULL,
+		    fk_wallet_id uuid REFERENCES wallets(id) NOT NULL,
+			fk_crypto_owning_id uuid REFERENCES cryptos_owning(id) ON DELETE CASCADE NOT NULL,
 		    created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
 			updated_at TIMESTAMP WITH TIME ZONE,
 			deleted_at TIMESTAMP WITH TIME ZONE

@@ -24,9 +24,7 @@ type IUserController interface {
 	Withdraw(w http.ResponseWriter, r *http.Request)
 	BuyCrypto(w http.ResponseWriter, r *http.Request)
 	Balance(w http.ResponseWriter, r *http.Request)
-	// SellCrypto(w http.ResponseWriter, r *http.Request)
-	// GetAllCurrencies(w http.ResponseWriter, r *http.Request)
-	// GetTotal(w http.ResponseWriter, r *http.Request)
+	SellCrypto(w http.ResponseWriter, r *http.Request)
 	// Transfer(w http.ResponseWriter, r *http.Request)
 }
 
@@ -34,6 +32,34 @@ type UserController struct {
 	service services.IUserService
 }
 
+func (u *UserController) SellCrypto(w http.ResponseWriter, r *http.Request) {
+	var userSellData models.UserBuySell
+	_, err := lib.GetBody(w, r.Body, &userSellData)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+	userId, ok := r.Context().Value("userId").(uuid.UUID)
+	if !ok {
+		http.Error(w, "ERROR_GETTING_DATA_FROM_TOKEN", http.StatusInternalServerError)
+	}
+	walletId, ok := r.Context().Value("walletId").(uuid.UUID)
+	if !ok {
+		http.Error(w, "ERROR_GETTING_DATA_FROM_TOKEN", http.StatusInternalServerError)
+	}
+	if userSellData.SymbolQuantity < 0 {
+		http.Error(w, "QUANTITY_MUST_BE_MORE_THAN_ZERO", http.StatusBadRequest)
+	}
+	err = u.service.Sell(userSellData, userId, walletId)
+	result := lib.ResponseHandler("SELL_SUCCESSFULLY", nil, nil)
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusAccepted)
+	err = json.NewEncoder(w).Encode(result)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+}
 func (u *UserController) Balance(w http.ResponseWriter, r *http.Request) {
 	walletId, ok := r.Context().Value("walletId").(uuid.UUID)
 	if !ok {
@@ -53,9 +79,8 @@ func (u *UserController) Balance(w http.ResponseWriter, r *http.Request) {
 	}
 
 }
-
 func (u *UserController) BuyCrypto(w http.ResponseWriter, r *http.Request) {
-	var userBuyData models.UserBuy
+	var userBuyData models.UserBuySell
 	_, err := lib.GetBody(w, r.Body, &userBuyData)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)

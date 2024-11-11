@@ -12,8 +12,8 @@ type ICryptoService interface {
 	UpdateValues() error
 	GetValues() ([]models.Crypto, error)
 	FindById(id uuid.UUID) (models.Crypto, error)
-	GetActualValueToBuy(symbol string) (float64, error)
-	UpdateValuesWhenBuy(symbol string, value float64) (uuid.UUID, error)
+	GetActualValue(symbol string) (float64, error)
+	UpdateValuesWhenBuySell(symbol string, value float64) (uuid.UUID, error)
 }
 type CryptoService struct {
 	repository      repositories.ICryptoRepository
@@ -22,7 +22,7 @@ type CryptoService struct {
 	desiredSymbols  []string
 }
 
-func (c *CryptoService) GetActualValueToBuy(symbol string) (float64, error) {
+func (c *CryptoService) GetActualValue(symbol string) (float64, error) {
 	var symbolArr []string
 	symbolArr = append(symbolArr, symbol)
 	prices, err := c.apiNinjaService.GetPrices(symbolArr)
@@ -31,7 +31,7 @@ func (c *CryptoService) GetActualValueToBuy(symbol string) (float64, error) {
 	}
 	return prices[0].Value, nil
 }
-func (c *CryptoService) UpdateValuesWhenBuy(symbol string, value float64) (uuid.UUID, error) {
+func (c *CryptoService) UpdateValuesWhenBuySell(symbol string, value float64) (uuid.UUID, error) {
 	cryptoData, err := c.repository.UpdatePriceBySymbolAndGetData(symbol, value)
 	if err != nil {
 		return uuid.Nil, err

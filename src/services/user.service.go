@@ -14,8 +14,9 @@ type IUserService interface {
 	FindOneByID(id uuid.UUID) (models.UserDTO, error)
 	Deposit(userId uuid.UUID, amount float64) error
 	Withdraw(userId uuid.UUID, amount float64) error
-	BuyCrypto(buyData models.UserBuy, userId uuid.UUID, walletId uuid.UUID) error
+	BuyCrypto(buyData models.UserBuySell, userId uuid.UUID, walletId uuid.UUID) error
 	BalanceWithTotal(walletId uuid.UUID) (models.CryptoBalance, error)
+	Sell(sellData models.UserBuySell, userId uuid.UUID, walletId uuid.UUID) error
 }
 type UserService struct {
 	repository    repositories.IUserRepository
@@ -27,6 +28,33 @@ type UserService struct {
 
 func (u *UserService) BalanceWithTotal(walletId uuid.UUID) (models.CryptoBalance, error) {
 	return u.cryptoOwningService.BalanceWithTotal(walletId)
+}
+func (u *UserService) Sell(sellData models.UserBuySell, userId uuid.UUID, walletId uuid.UUID) error {
+	symbol, symbolQuantity := sellData.Symbol, sellData.SymbolQuantity
+	actualValue, err := u.cryptoService.GetActualValue(symbol)
+	if err != nil {
+		return err
+	}
+	cryptoId, err := u.cryptoService.UpdateValuesWhenBuySell(symbol, actualValue)
+	if err != nil {
+		return err
+	}
+	userAccount, err := u.repository.FindOneByID(userId)
+	if err != nil {
+		return err
+	}
+	err = u.cryptoOwningService.Sell(cryptoId, walletId, symbolQuantity)
+	if err != nil {
+		return err
+	}
+	userMoney := userAccount.Money
+	currentValuePerQuantity := actualValue * symbolQuantity
+	newMoneyInAccount := userMoney + currentValuePerQuantity
+	err = u.repository.UpdateMoney(userId, newMoneyInAccount)
+	if err != nil {
+		return err
+	}
+	return nil
 }
 
 /*
@@ -44,13 +72,13 @@ Check if the current amount of money in the account is enough to buy that symbol
 5- Make the transaction with fee
 6- Return message of success or error
 */
-func (u *UserService) BuyCrypto(buyData models.UserBuy, userId uuid.UUID, walletId uuid.UUID) error {
+func (u *UserService) BuyCrypto(buyData models.UserBuySell, userId uuid.UUID, walletId uuid.UUID) error {
 	symbol, symbolQuantity := buyData.Symbol, buyData.SymbolQuantity
-	actualValue, err := u.cryptoService.GetActualValueToBuy(symbol)
+	actualValue, err := u.cryptoService.GetActualValue(symbol)
 	if err != nil {
 		return err
 	}
-	cryptoId, err := u.cryptoService.UpdateValuesWhenBuy(symbol, actualValue)
+	cryptoId, err := u.cryptoService.UpdateValuesWhenBuySell(symbol, actualValue)
 	if err != nil {
 		return err
 	}
@@ -71,7 +99,7 @@ func (u *UserService) BuyCrypto(buyData models.UserBuy, userId uuid.UUID, wallet
 	if err != nil {
 		return err
 	}
-	newMoneyInAccount := userAccount.Money - symbolCost
+	newMoneyInAccount := userMoney - symbolCost
 	err = u.repository.UpdateMoney(userId, newMoneyInAccount)
 	if err != nil {
 		return err

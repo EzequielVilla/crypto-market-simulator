@@ -49,17 +49,7 @@ func createTables(tx *sqlx.Tx) {
 	tx.MustExec(models.WalletSchema())
 	tx.MustExec(models.CryptoSchema())
 	tx.MustExec(models.CryptoOwningSchema())
-	tx.MustExec(`
-		CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
-		CREATE TABLE IF NOT EXISTS wallet_cryptos (
-		    id uuid DEFAULT uuid_generate_v4() PRIMARY KEY UNIQUE,
-		    fk_wallet_id uuid REFERENCES wallets(id) NOT NULL,
-			fk_crypto_owning_id uuid REFERENCES cryptos_owning(id) NOT NULL,
-		    created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
-			updated_at TIMESTAMP WITH TIME ZONE,
-			deleted_at TIMESTAMP WITH TIME ZONE
-		);
-	`)
+	tx.MustExec(models.WalletCryptoSchema())
 	tx.MustExec(models.SystemSchema())
 	tx.MustExec(`INSERT INTO system DEFAULT VALUES `)
 }
