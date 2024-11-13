@@ -5,6 +5,7 @@ import (
 	"crypto-market-simulator/src/models"
 	"crypto-market-simulator/src/services"
 	"encoding/json"
+	"errors"
 	"github.com/google/uuid"
 	"net/http"
 	"strconv"
@@ -35,130 +36,170 @@ type UserController struct {
 }
 
 func (u *UserController) FindOthers(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
 	userId, ok := r.Context().Value("userId").(uuid.UUID)
 	if !ok {
-		http.Error(w, "ERROR_GETTING_DATA_FROM_TOKEN", http.StatusInternalServerError)
+		errResult := lib.ResponseHandler("ERROR", errors.New("ERROR_GETTING_DATA_FROM_TOKEN"), nil)
+		w.WriteHeader(http.StatusInternalServerError)
+		_ = json.NewEncoder(w).Encode(errResult)
 	}
 	pageStr := r.URL.Query().Get("page")
 	page, err := strconv.Atoi(pageStr)
 	data, err := u.service.FindOthers(userId, page)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
+		errResult := lib.ResponseHandler("ERROR", err, nil)
+		w.WriteHeader(http.StatusBadRequest)
+		_ = json.NewEncoder(w).Encode(errResult)
 		return
 	}
 	result := lib.ResponseHandler("USERS_FOUNDED", nil, data)
-	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusAccepted)
 	err = json.NewEncoder(w).Encode(result)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		errResult := lib.ResponseHandler("ERROR", err, nil)
+		w.WriteHeader(http.StatusInternalServerError)
+		_ = json.NewEncoder(w).Encode(errResult)
 		return
 	}
 
 }
 
 func (u *UserController) SellCrypto(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
 	var userSellData models.UserBuySell
 	_, err := lib.GetBody(w, r.Body, &userSellData)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
+		errResult := lib.ResponseHandler("ERROR", err, nil)
+		w.WriteHeader(http.StatusInternalServerError)
+		_ = json.NewEncoder(w).Encode(errResult)
 		return
 	}
 	userId, ok := r.Context().Value("userId").(uuid.UUID)
 	if !ok {
-		http.Error(w, "ERROR_GETTING_DATA_FROM_TOKEN", http.StatusInternalServerError)
+		errResult := lib.ResponseHandler("ERROR", errors.New("ERROR_GET_TOKEN"), nil)
+		w.WriteHeader(http.StatusInternalServerError)
+		_ = json.NewEncoder(w).Encode(errResult)
 	}
 	walletId, ok := r.Context().Value("walletId").(uuid.UUID)
 	if !ok {
-		http.Error(w, "ERROR_GETTING_DATA_FROM_TOKEN", http.StatusInternalServerError)
+		errResult := lib.ResponseHandler("ERROR", errors.New("ERROR_GET_TOKEN"), nil)
+		w.WriteHeader(http.StatusInternalServerError)
+		_ = json.NewEncoder(w).Encode(errResult)
 	}
 	if userSellData.SymbolQuantity < 0 {
-		http.Error(w, "QUANTITY_MUST_BE_MORE_THAN_ZERO", http.StatusBadRequest)
+		errResult := lib.ResponseHandler("ERROR", err, nil)
+		w.WriteHeader(http.StatusBadRequest)
+		_ = json.NewEncoder(w).Encode(errResult)
 	}
 	err = u.service.Sell(userSellData, userId, walletId)
 	result := lib.ResponseHandler("SELL_SUCCESSFULLY", nil, nil)
-	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusAccepted)
 	err = json.NewEncoder(w).Encode(result)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		errResult := lib.ResponseHandler("ERROR", err, nil)
+		w.WriteHeader(http.StatusInternalServerError)
+		_ = json.NewEncoder(w).Encode(errResult)
 		return
 	}
 }
 func (u *UserController) Balance(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
 	walletId, ok := r.Context().Value("walletId").(uuid.UUID)
 	if !ok {
-		http.Error(w, "ERROR_GETTING_DATA_FROM_TOKEN", http.StatusInternalServerError)
+		errResult := lib.ResponseHandler("ERROR", errors.New("ERROR_GET_TOKEN"), nil)
+		w.WriteHeader(http.StatusInternalServerError)
+		_ = json.NewEncoder(w).Encode(errResult)
 	}
 	balance, err := u.service.BalanceWithTotal(walletId)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
+		errResult := lib.ResponseHandler("ERROR", err, nil)
+		w.WriteHeader(http.StatusBadRequest)
+		_ = json.NewEncoder(w).Encode(errResult)
 	}
 	result := lib.ResponseHandler("BALANCE_AND_TOTAL", nil, balance)
-	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
 	err = json.NewEncoder(w).Encode(result)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		errResult := lib.ResponseHandler("ERROR", err, nil)
+		w.WriteHeader(http.StatusInternalServerError)
+		_ = json.NewEncoder(w).Encode(errResult)
 		return
 	}
 
 }
 func (u *UserController) BuyCrypto(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
 	var userBuyData models.UserBuySell
 	_, err := lib.GetBody(w, r.Body, &userBuyData)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
+		errResult := lib.ResponseHandler("ERROR", err, nil)
+		w.WriteHeader(http.StatusInternalServerError)
+		_ = json.NewEncoder(w).Encode(errResult)
 		return
 	}
 	userId, ok := r.Context().Value("userId").(uuid.UUID)
 	if !ok {
-		http.Error(w, "ERROR_GETTING_DATA_FROM_TOKEN", http.StatusInternalServerError)
+		errResult := lib.ResponseHandler("ERROR", errors.New("ERROR_GET_TOKEN"), nil)
+		w.WriteHeader(http.StatusInternalServerError)
+		_ = json.NewEncoder(w).Encode(errResult)
 	}
 	walletId, ok := r.Context().Value("walletId").(uuid.UUID)
 	if !ok {
-		http.Error(w, "ERROR_GETTING_DATA_FROM_TOKEN", http.StatusInternalServerError)
+		errResult := lib.ResponseHandler("ERROR", errors.New("ERROR_GET_TOKEN"), nil)
+		w.WriteHeader(http.StatusInternalServerError)
+		_ = json.NewEncoder(w).Encode(errResult)
 	}
 	err = u.service.BuyCrypto(userBuyData, userId, walletId)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
+		errResult := lib.ResponseHandler("ERROR", err, nil)
+		w.WriteHeader(http.StatusBadRequest)
+		_ = json.NewEncoder(w).Encode(errResult)
 		return
 	}
 	result := lib.ResponseHandler("BUY_SUCCESSFULLY", nil, nil)
-	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusAccepted)
 	err = json.NewEncoder(w).Encode(result)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		errResult := lib.ResponseHandler("ERROR", err, nil)
+		w.WriteHeader(http.StatusInternalServerError)
+		_ = json.NewEncoder(w).Encode(errResult)
 		return
 	}
 }
 
 func (u *UserController) Withdraw(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
 	var userWithdraw UserAmount
 	body, err := lib.GetBody(w, r.Body, &userWithdraw)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
+		errResult := lib.ResponseHandler("ERROR", err, nil)
+		w.WriteHeader(http.StatusInternalServerError)
+		_ = json.NewEncoder(w).Encode(errResult)
 		return
 	}
 	userId, ok := r.Context().Value("userId").(uuid.UUID)
 	if !ok {
-		http.Error(w, "ERROR_GETTING_DATA_FROM_TOKEN", http.StatusInternalServerError)
+		errResult := lib.ResponseHandler("ERROR", errors.New("ERROR_GET_TOKEN"), nil)
+		w.WriteHeader(http.StatusInternalServerError)
+		_ = json.NewEncoder(w).Encode(errResult)
 	}
 	amount := body.Amount
 	err = u.service.Withdraw(userId, amount)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
+		errResult := lib.ResponseHandler("ERROR", err, nil)
+		w.WriteHeader(http.StatusBadRequest)
+		_ = json.NewEncoder(w).Encode(errResult)
 		return
 	}
 
 	result := lib.ResponseHandler("WITHDRAW_SUCCESSFULLY", nil, nil)
-	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusAccepted)
 
 	err = json.NewEncoder(w).Encode(result)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		errResult := lib.ResponseHandler("ERROR", err, nil)
+		w.WriteHeader(http.StatusInternalServerError)
+		_ = json.NewEncoder(w).Encode(errResult)
 		return
 	}
 }
@@ -169,31 +210,39 @@ type UserWalletIds struct {
 }
 
 func (u *UserController) Deposit(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
 	var userDeposit UserAmount
 	body, err := lib.GetBody(w, r.Body, &userDeposit)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
+		errResult := lib.ResponseHandler("ERROR", err, nil)
+		w.WriteHeader(http.StatusInternalServerError)
+		_ = json.NewEncoder(w).Encode(errResult)
 		return
 	}
 
 	userId, ok := r.Context().Value("userId").(uuid.UUID)
 	if !ok {
-		http.Error(w, "ERROR_GETTING_DATA_FROM_TOKEN", http.StatusInternalServerError)
+		errResult := lib.ResponseHandler("ERROR", errors.New("ERROR_GET_TOKEN"), nil)
+		w.WriteHeader(http.StatusInternalServerError)
+		_ = json.NewEncoder(w).Encode(errResult)
 	}
 	amount := body.Amount
 	err = u.service.Deposit(userId, amount)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
+		errResult := lib.ResponseHandler("ERROR", err, nil)
+		w.WriteHeader(http.StatusBadRequest)
+		_ = json.NewEncoder(w).Encode(errResult)
 		return
 	}
 	result := lib.ResponseHandler("DEPOSIT_SUCCESSFULLY", nil, nil)
 
-	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusAccepted)
 
 	err = json.NewEncoder(w).Encode(result)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		errResult := lib.ResponseHandler("ERROR", err, nil)
+		w.WriteHeader(http.StatusBadRequest)
+		_ = json.NewEncoder(w).Encode(errResult)
 		return
 	}
 

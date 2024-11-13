@@ -21,10 +21,12 @@ type AuthLogin struct {
 
 func (a *AuthController) Create(w http.ResponseWriter, r *http.Request) {
 	var auth AuthCreate
-
+	w.Header().Set("Content-Type", "application/json")
 	body, err := lib.GetBody(w, r.Body, &auth)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
+		errResult := lib.ResponseHandler("ERROR", err, nil)
+		w.WriteHeader(http.StatusBadRequest)
+		_ = json.NewEncoder(w).Encode(errResult)
 		return
 	}
 	email, password, name := body.Email, body.Password, body.Name
@@ -37,44 +39,61 @@ func (a *AuthController) Create(w http.ResponseWriter, r *http.Request) {
 		rollbackErr := tx.Rollback()
 		if rollbackErr != nil {
 			fmt.Println("ROLLBACK FAILED")
-			http.Error(w, err.Error(), http.StatusInternalServerError)
+			errResult := lib.ResponseHandler("ERROR", err, nil)
+			w.WriteHeader(http.StatusBadRequest)
+			_ = json.NewEncoder(w).Encode(errResult)
 			return
+
 		}
-		http.Error(w, err.Error(), http.StatusBadRequest)
+		errResult := lib.ResponseHandler("ERROR", err, nil)
+		w.WriteHeader(http.StatusBadRequest)
+		_ = json.NewEncoder(w).Encode(errResult)
 		return
+
 	}
 	result := lib.ResponseHandler("AUTH_CREATED", nil, nil)
 	// Finish transaction
 	err = tx.Commit()
 	if err != nil {
 		fmt.Println("COMMIT_FAILED")
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		errResult := lib.ResponseHandler("ERROR", err, nil)
+		w.WriteHeader(http.StatusBadRequest)
+		_ = json.NewEncoder(w).Encode(errResult)
 		return
+
 	}
-	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusCreated)
 	err = json.NewEncoder(w).Encode(result)
 	if err != nil {
 		fmt.Println("ENCODER FAILED")
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		errResult := lib.ResponseHandler("ERROR", err, nil)
+		w.WriteHeader(http.StatusBadRequest)
+		_ = json.NewEncoder(w).Encode(errResult)
 		return
+
 	}
 }
 func (a *AuthController) Login(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
 	var auth AuthLogin
 	body, err := lib.GetBody(w, r.Body, &auth)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
+		errResult := lib.ResponseHandler("ERROR", err, nil)
+		w.WriteHeader(http.StatusBadRequest)
+		_ = json.NewEncoder(w).Encode(errResult)
 		return
+
 	}
 	email, password := body.Email, body.Password
 	user, err := a.service.Login(email, password)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
+		errResult := lib.ResponseHandler("ERROR", err, nil)
+		w.WriteHeader(http.StatusBadRequest)
+		_ = json.NewEncoder(w).Encode(errResult)
 		return
+
 	}
 	result := lib.ResponseHandler("OK", nil, user)
-	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
 	err = json.NewEncoder(w).Encode(result)
 }

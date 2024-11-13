@@ -19,54 +19,65 @@ type CryptoController struct {
 }
 
 func (c *CryptoController) PatchValues(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
 	err := c.service.UpdateValues()
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
+		errResult := lib.ResponseHandler("ERROR", err, nil)
+		w.WriteHeader(http.StatusBadRequest)
+		_ = json.NewEncoder(w).Encode(errResult)
 		return
 	}
 	result := lib.ResponseHandler("VALUES_PATCH_OK", nil, nil)
-	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
 	err = json.NewEncoder(w).Encode(result)
 	if err != nil {
 		fmt.Println("ENCODER FAILED")
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		errResult := lib.ResponseHandler("ERROR", err, nil)
+		w.WriteHeader(http.StatusInternalServerError)
+		_ = json.NewEncoder(w).Encode(errResult)
 		return
 	}
 
 }
 
 func (c *CryptoController) GetValues(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
 	values, err := c.service.GetValues()
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
+		errResult := lib.ResponseHandler("ERROR", err, nil)
+		w.WriteHeader(http.StatusBadRequest)
+		_ = json.NewEncoder(w).Encode(errResult)
 		return
 	}
 	result := lib.ResponseHandler("VALUES_REQUEST_OK", nil, values)
-	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
 	err = json.NewEncoder(w).Encode(result)
 	if err != nil {
 		fmt.Println("ENCODER FAILED")
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		errResult := lib.ResponseHandler("ERROR", err, nil)
+		w.WriteHeader(http.StatusInternalServerError)
+		_ = json.NewEncoder(w).Encode(errResult)
 		return
 	}
 }
 
 func (c *CryptoController) FetchApiNinja(w http.ResponseWriter, r *http.Request) {
-
+	w.Header().Set("Content-Type", "application/json")
 	err := c.service.FillSymbols()
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
+		errResult := lib.ResponseHandler("ERROR", err, nil)
+		w.WriteHeader(http.StatusBadRequest)
+		_ = json.NewEncoder(w).Encode(errResult)
 		return
 	}
 	result := lib.ResponseHandler("SYMBOLS_FILLED", nil, nil)
-	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
 	err = json.NewEncoder(w).Encode(result)
 	if err != nil {
 		fmt.Println("ENCODER FAILED")
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		errResult := lib.ResponseHandler("ERROR", err, nil)
+		w.WriteHeader(http.StatusInternalServerError)
+		_ = json.NewEncoder(w).Encode(errResult)
 		return
 	}
 }
