@@ -14,6 +14,7 @@ func UserRoutes(router *mux.Router) {
 	balanceHandler := http.HandlerFunc(userController.Balance)
 	buyHandler := http.HandlerFunc(userController.BuyCrypto)
 	sellHandler := http.HandlerFunc(userController.SellCrypto)
+	findOthersHandler := http.HandlerFunc(userController.FindOthers)
 
 	userRouter := router.PathPrefix("/user").Subrouter()
 	userRouter.Handle("/deposit", middlewares.AuthMiddleware(depositHandler)).Methods("PATCH")
@@ -21,5 +22,6 @@ func UserRoutes(router *mux.Router) {
 	userRouter.Handle("/buy", middlewares.AuthMiddleware(buyHandler)).Methods("POST")
 	userRouter.Handle("/sell", middlewares.AuthMiddleware(sellHandler)).Methods("POST")
 	userRouter.Handle("/balance", middlewares.AuthMiddleware(balanceHandler)).Methods("GET")
+	userRouter.Handle("/find-others", middlewares.AuthMiddleware(findOthersHandler)).Methods("GET")
 
 }

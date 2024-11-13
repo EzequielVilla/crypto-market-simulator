@@ -9,14 +9,14 @@ import (
 type Response struct {
 	Message string      `json:"message,omitempty"`
 	Result  interface{} `json:"result,omitempty"`
-	Error   error       `json:"error,omitempty"`
+	Error   string      `json:"error,omitempty"`
 }
 
 func ResponseHandler(message string, err error, result ...interface{}) Response {
 	return Response{
 		Message: message,
 		Result:  result[0],
-		Error:   err,
+		Error:   err.Error(),
 	}
 }
 func GetBody[T interface{}](w http.ResponseWriter, body io.ReadCloser, model *T) (*T, error) {
@@ -32,5 +32,4 @@ func GetBody[T interface{}](w http.ResponseWriter, body io.ReadCloser, model *T)
 		return nil, err
 	}
 	return model, nil
-
 }

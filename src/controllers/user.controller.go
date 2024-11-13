@@ -7,6 +7,7 @@ import (
 	"encoding/json"
 	"github.com/google/uuid"
 	"net/http"
+	"strconv"
 )
 
 type UserAmount struct {
@@ -25,11 +26,35 @@ type IUserController interface {
 	BuyCrypto(w http.ResponseWriter, r *http.Request)
 	Balance(w http.ResponseWriter, r *http.Request)
 	SellCrypto(w http.ResponseWriter, r *http.Request)
+	FindOthers(w http.ResponseWriter, r *http.Request)
 	// Transfer(w http.ResponseWriter, r *http.Request)
 }
 
 type UserController struct {
 	service services.IUserService
+}
+
+func (u *UserController) FindOthers(w http.ResponseWriter, r *http.Request) {
+	userId, ok := r.Context().Value("userId").(uuid.UUID)
+	if !ok {
+		http.Error(w, "ERROR_GETTING_DATA_FROM_TOKEN", http.StatusInternalServerError)
+	}
+	pageStr := r.URL.Query().Get("page")
+	page, err := strconv.Atoi(pageStr)
+	data, err := u.service.FindOthers(userId, page)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+	result := lib.ResponseHandler("USERS_FOUNDED", nil, data)
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusAccepted)
+	err = json.NewEncoder(w).Encode(result)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
 }
 
 func (u *UserController) SellCrypto(w http.ResponseWriter, r *http.Request) {

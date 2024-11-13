@@ -1,6 +1,7 @@
 package services
 
 import (
+	"crypto-market-simulator/internal/lib"
 	"crypto-market-simulator/src/models"
 	"crypto-market-simulator/src/repositories"
 	"errors"
@@ -17,15 +18,20 @@ type IUserService interface {
 	BuyCrypto(buyData models.UserBuySell, userId uuid.UUID, walletId uuid.UUID) error
 	BalanceWithTotal(walletId uuid.UUID) (models.CryptoBalance, error)
 	Sell(sellData models.UserBuySell, userId uuid.UUID, walletId uuid.UUID) error
+	FindOthers(userId uuid.UUID, page int) (models.UserDataAndCount, error)
 }
 type UserService struct {
 	repository    repositories.IUserRepository
 	cryptoService ICryptoService
 	systemService ISystemService
-	// maybe change this an call wallet instead of cryptoOwning
+	// maybe change this a call wallet instead of cryptoOwning
 	cryptoOwningService ICryptoOwningService
 }
 
+func (u *UserService) FindOthers(userId uuid.UUID, page int) (models.UserDataAndCount, error) {
+	pagination := lib.GetPaginationLimitOffset(page)
+	return u.repository.GetList(userId, pagination.Offset, pagination.Limit)
+}
 func (u *UserService) BalanceWithTotal(walletId uuid.UUID) (models.CryptoBalance, error) {
 	return u.cryptoOwningService.BalanceWithTotal(walletId)
 }
@@ -48,7 +54,11 @@ func (u *UserService) Sell(sellData models.UserBuySell, userId uuid.UUID, wallet
 		return err
 	}
 	userMoney := userAccount.Money
-	currentValuePerQuantity := actualValue * symbolQuantity
+	quantityAfterFee, err := u.systemService.SellFeeAndGetNewQuantity(symbolQuantity, actualValue)
+	if err != nil {
+		return err
+	}
+	currentValuePerQuantity := actualValue * quantityAfterFee
 	newMoneyInAccount := userMoney + currentValuePerQuantity
 	err = u.repository.UpdateMoney(userId, newMoneyInAccount)
 	if err != nil {
@@ -119,7 +129,6 @@ func (u *UserService) Create(authId uuid.UUID, name string, tx *sqlx.Tx) (uuid.U
 	userId, err := u.repository.Create(authId, name, tx)
 	return userId, err
 }
-
 func (u *UserService) FindByEmailAndPassword(email string, password string) (models.UserDTO, error) {
 	return u.repository.FindByEmailAndPassword(email, password)
 }

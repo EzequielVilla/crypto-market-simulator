@@ -43,7 +43,7 @@ func (a *AuthController) Create(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
-	result := lib.ResponseHandler("OK", nil, nil)
+	result := lib.ResponseHandler("AUTH_CREATED", nil, nil)
 	// Finish transaction
 	err = tx.Commit()
 	if err != nil {
@@ -59,7 +59,6 @@ func (a *AuthController) Create(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
-
 }
 func (a *AuthController) Login(w http.ResponseWriter, r *http.Request) {
 	var auth AuthLogin

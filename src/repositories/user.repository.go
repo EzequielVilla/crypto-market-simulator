@@ -17,10 +17,44 @@ type IUserRepository interface {
 	Deposit(userId uuid.UUID, amount float64) error
 	Withdraw(userId uuid.UUID, amount float64) error
 	UpdateMoney(userId uuid.UUID, amount float64) error
+	GetList(userId uuid.UUID, offset int, limit int) (models.UserDataAndCount, error)
 }
 
 type UserRepository struct {
 	db *sqlx.DB
+}
+
+func (u *UserRepository) GetList(userId uuid.UUID, offset int, limit int) (models.UserDataAndCount, error) {
+	var users []models.UserBasicData
+	var query = `
+			SELECT users.id, users.name, COUNT(*) Over() As total_count
+			FROM users 
+			WHERE id != $1
+			OFFSET $2 
+			LIMIT $3	
+	`
+	rows, err := u.db.Query(query, userId.String(), offset, limit)
+	if err != nil {
+		fmt.Printf("ERROR_GET_LIST: %v \n", err)
+		return models.UserDataAndCount{}, errors.New("ERROR_GET_LIST")
+	}
+	defer rows.Close()
+	var totalCount int
+	for rows.Next() {
+		var user models.UserBasicData
+		scanErr := rows.Scan(&user.Id, &user.Name, &totalCount)
+		if scanErr != nil {
+			fmt.Printf("ERROR_SCAN_GET_LIST: %v \n", scanErr)
+			return models.UserDataAndCount{}, errors.New("ERROR_GET_LIST")
+		}
+		users = append(users, user)
+	}
+	data := models.UserDataAndCount{
+		UsersData: users,
+		Count:     totalCount,
+		Offset:    offset,
+	}
+	return data, nil
 }
 
 func (u *UserRepository) UpdateMoney(userId uuid.UUID, amount float64) error {

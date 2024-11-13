@@ -19,6 +19,15 @@ type UserBuySell struct {
 	Symbol         string  `json:"symbol"`
 	SymbolQuantity float64 `json:"symbolQuantity"`
 }
+type UserBasicData struct {
+	Id   uuid.UUID `json:"id,omitempty" db:"id"`
+	Name string    `json:"name,omitempty" db:"name"`
+}
+type UserDataAndCount struct {
+	UsersData []UserBasicData `json:"usersData"`
+	Count     int             `json:"count"`
+	Offset    int             `json:"offset"`
+}
 
 func UserSchema() string {
 

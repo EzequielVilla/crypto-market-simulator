@@ -11,8 +11,6 @@ import (
 	"github.com/redis/go-redis/v9"
 )
 
-// ICryptoCacheRepository TODO save it like a hash  with ID included and that could be used later
-
 type ICryptoCacheRepository interface {
 	SetPrices(cryptos []models.Crypto) error
 	GetValues(symbols []string) ([]models.Crypto, error)
