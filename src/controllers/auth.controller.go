@@ -3,26 +3,18 @@ package controllers
 import (
 	"crypto-market-simulator/internal/db"
 	"crypto-market-simulator/internal/lib"
+	"crypto-market-simulator/src/models"
 	"crypto-market-simulator/src/services"
 	"encoding/json"
 	"fmt"
 	"net/http"
 )
 
-type AuthCreate struct {
-	Email    string `json:"email"`
-	Password string `json:"password"`
-	Name     string `json:"name"`
-}
-type AuthLogin struct {
-	Email    string `json:"email"`
-	Password string `json:"password"`
-}
-
 func (a *AuthController) Create(w http.ResponseWriter, r *http.Request) {
-	var auth AuthCreate
+	var auth models.AuthCreateBody
+
 	w.Header().Set("Content-Type", "application/json")
-	body, err := lib.GetBody(w, r.Body, &auth)
+	body, err := lib.GetBody(r, &auth)
 	if err != nil {
 		errResult := lib.ResponseHandler("ERROR", err, nil)
 		w.WriteHeader(http.StatusBadRequest)
@@ -75,8 +67,8 @@ func (a *AuthController) Create(w http.ResponseWriter, r *http.Request) {
 }
 func (a *AuthController) Login(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
-	var auth AuthLogin
-	body, err := lib.GetBody(w, r.Body, &auth)
+	var auth models.AuthLoginBody
+	body, err := lib.GetBody(r, &auth)
 	if err != nil {
 		errResult := lib.ResponseHandler("ERROR", err, nil)
 		w.WriteHeader(http.StatusBadRequest)

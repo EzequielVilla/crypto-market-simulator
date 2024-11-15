@@ -11,10 +11,6 @@ import (
 	"strconv"
 )
 
-type UserAmount struct {
-	Amount float64 `json:"amount"`
-}
-
 // BalanceWithTotal gives me all the currencies * by the currency price plus the amount in the wallet
 // AllCurrencies gives me information about the user tenure.
 // GetTotal maybe it's equal to BalanceWithTotal
@@ -67,7 +63,7 @@ func (u *UserController) FindOthers(w http.ResponseWriter, r *http.Request) {
 func (u *UserController) SellCrypto(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	var userSellData models.UserBuySell
-	_, err := lib.GetBody(w, r.Body, &userSellData)
+	_, err := lib.GetBody(r, &userSellData)
 	if err != nil {
 		errResult := lib.ResponseHandler("ERROR", err, nil)
 		w.WriteHeader(http.StatusInternalServerError)
@@ -130,7 +126,7 @@ func (u *UserController) Balance(w http.ResponseWriter, r *http.Request) {
 func (u *UserController) BuyCrypto(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	var userBuyData models.UserBuySell
-	_, err := lib.GetBody(w, r.Body, &userBuyData)
+	_, err := lib.GetBody(r, &userBuyData)
 	if err != nil {
 		errResult := lib.ResponseHandler("ERROR", err, nil)
 		w.WriteHeader(http.StatusInternalServerError)
@@ -169,8 +165,8 @@ func (u *UserController) BuyCrypto(w http.ResponseWriter, r *http.Request) {
 
 func (u *UserController) Withdraw(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
-	var userWithdraw UserAmount
-	body, err := lib.GetBody(w, r.Body, &userWithdraw)
+	var userWithdraw models.UserAmountBody
+	body, err := lib.GetBody(r, &userWithdraw)
 	if err != nil {
 		errResult := lib.ResponseHandler("ERROR", err, nil)
 		w.WriteHeader(http.StatusInternalServerError)
@@ -211,8 +207,8 @@ type UserWalletIds struct {
 
 func (u *UserController) Deposit(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
-	var userDeposit UserAmount
-	body, err := lib.GetBody(w, r.Body, &userDeposit)
+	var userDeposit models.UserAmountBody
+	body, err := lib.GetBody(r, &userDeposit)
 	if err != nil {
 		errResult := lib.ResponseHandler("ERROR", err, nil)
 		w.WriteHeader(http.StatusInternalServerError)

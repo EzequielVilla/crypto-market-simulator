@@ -16,8 +16,8 @@ type UserDTO struct {
 	Wallet    *WalletDTO `json:"wallet,omitempty"`
 }
 type UserBuySell struct {
-	Symbol         string  `json:"symbol"`
-	SymbolQuantity float64 `json:"symbolQuantity"`
+	Symbol         string  `json:"symbol" validate:"required"`
+	SymbolQuantity float64 `json:"symbolQuantity" validate:"required"`
 }
 type UserBasicData struct {
 	Id   uuid.UUID `json:"id,omitempty" db:"id"`
@@ -27,6 +27,9 @@ type UserDataAndCount struct {
 	UsersData []UserBasicData `json:"usersData"`
 	Count     int             `json:"count"`
 	Offset    int             `json:"offset"`
+}
+type UserAmountBody struct {
+	Amount float64 `json:"amount" validate:"required"`
 }
 
 func UserSchema() string {

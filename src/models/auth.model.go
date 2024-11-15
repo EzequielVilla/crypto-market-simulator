@@ -15,6 +15,16 @@ type AuthDTO struct {
 	User      *UserDTO   `json:"user,omitempty"`
 }
 
+type AuthCreateBody struct {
+	Email    string `json:"email" validate:"required"`
+	Password string `json:"password" validate:"required"`
+	Name     string `json:"name" validate:"required"`
+}
+type AuthLoginBody struct {
+	Email    string `json:"email" validate:"required"`
+	Password string `json:"password" validate:"required"`
+}
+
 func AuthSchema() string {
 	var mySchema = ` 
 	CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
