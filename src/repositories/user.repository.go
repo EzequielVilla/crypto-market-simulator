@@ -127,6 +127,8 @@ func (u *UserRepository) Create(authId uuid.UUID, name string, tx *sqlx.Tx) (uui
 }
 func (u *UserRepository) FindByEmailAndPassword(email string, password string) (models.UserDTO, error) {
 	var user models.UserDTO
+	user.Wallet = &models.WalletDTO{}
+
 	var query = `
 		SELECT  
             users.id,
@@ -147,40 +149,28 @@ func (u *UserRepository) FindByEmailAndPassword(email string, password string) (
 		WHERE email = $1 
 			AND password = $2
 		`
-	rows, err := u.db.Query(query, email, password)
+	err := u.db.QueryRow(query, email, password).Scan(
+		&user.Id,
+		&user.Name,
+		&user.Money,
+		&user.AuthId,
+		&user.CreatedAt,
+		&user.UpdatedAt,
+		&user.DeletedAt,
+		&user.Wallet.Id,
+		&user.Wallet.UserId,
+		&user.Wallet.CreatedAt,
+		&user.Wallet.UpdatedAt,
+		&user.Wallet.DeletedAt,
+	)
 	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return models.UserDTO{}, errors.New("USER_NOT_FOUND")
+		}
 		fmt.Printf("ERROR_SEARCHING_USER: %v\n", err)
 		return models.UserDTO{}, errors.New("ERROR_SEARCHING_USER")
 	}
-	defer func(rows *sql.Rows) {
-		closeErr := rows.Close()
-		if closeErr != nil {
-			fmt.Printf("ERROR_SEARCHING_USER: %v\n", err)
-		}
-	}(rows)
 
-	user.Wallet = &models.WalletDTO{}
-	for rows.Next() {
-		scanErr := rows.Scan(
-			&user.Id,
-			&user.Name,
-			&user.Money,
-			&user.AuthId,
-			&user.CreatedAt,
-			&user.UpdatedAt,
-			&user.DeletedAt,
-			&user.Wallet.Id,
-			&user.Wallet.UserId,
-			&user.Wallet.CreatedAt,
-			&user.Wallet.UpdatedAt,
-			&user.Wallet.DeletedAt,
-		)
-		if scanErr != nil {
-			fmt.Printf("ERROR_SCAN: %v\n", scanErr)
-			return models.UserDTO{}, errors.New("ERROR_SEARCHING_USER")
-		}
-
-	}
 	return user, nil
 }
 

@@ -126,7 +126,7 @@ func (u *UserController) Balance(w http.ResponseWriter, r *http.Request) {
 func (u *UserController) BuyCrypto(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	var userBuyData models.UserBuySell
-	_, err := lib.GetBody(r, &userBuyData)
+	body, err := lib.GetBody(r, &userBuyData)
 	if err != nil {
 		errResult := lib.ResponseHandler("ERROR", err, nil)
 		w.WriteHeader(http.StatusInternalServerError)
@@ -145,7 +145,7 @@ func (u *UserController) BuyCrypto(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusInternalServerError)
 		_ = json.NewEncoder(w).Encode(errResult)
 	}
-	err = u.service.BuyCrypto(userBuyData, userId, walletId)
+	err = u.service.BuyCrypto(*body, userId, walletId)
 	if err != nil {
 		errResult := lib.ResponseHandler("ERROR", err, nil)
 		w.WriteHeader(http.StatusBadRequest)

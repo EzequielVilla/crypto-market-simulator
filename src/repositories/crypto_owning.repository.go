@@ -56,17 +56,23 @@ func (c *CryptoOwningRepository) Delete(cryptoOwningId uuid.UUID) error {
 func (c *CryptoOwningRepository) GetBalanceWithTotal(walletId uuid.UUID) (models.CryptoBalance, error) {
 	var valuesAndQuantities []models.CryptoDataQuantityValues
 	var total float64
+	var money float64
+	var totalWithCurrency float64
 	var query = `
-		SELECT 
-		    c.id,
-		    c.value,
-		    c.name,
-		    co.quantity,
-		    c.value * co.quantity AS value_per_quantity,
-			SUM(c.value * co.quantity) OVER () as total_value
-		FROM wallet_cryptos wc
-		JOIN cryptos_owning co ON wc.fk_crypto_owning_id = co.id
-		JOIN cryptos c ON co.crypto_id = c.id
+		SELECT
+			c.id,
+			c.value,
+			c.name,
+			co.quantity,
+			c.value * co.quantity AS value_per_quantity,
+			SUM(c.value * co.quantity) OVER () as total_value,
+			u.money AS money,
+			COALESCE(SUM(c.value * co.quantity) OVER (), 0) + u.money AS total_with_currency
+		FROM users u
+			 JOIN wallets w ON u.id = w.fk_user_id
+			 LEFT JOIN wallet_cryptos wc ON wc.fk_wallet_id = w.id
+			 LEFT JOIN cryptos_owning co ON wc.fk_crypto_owning_id = co.id
+			 LEFT JOIN cryptos c ON co.crypto_id = c.id
 		WHERE wc.fk_wallet_id = $1
 	`
 	queryData, err := c.db.Query(query, walletId.String())
@@ -77,7 +83,8 @@ func (c *CryptoOwningRepository) GetBalanceWithTotal(walletId uuid.UUID) (models
 	for queryData.Next() {
 		var data models.CryptoDataQuantityValues
 		var rowTotal float64
-
+		var rowMoney float64
+		var rowTotalWithCurrency float64
 		err = queryData.Scan(
 			&data.CryptoData.Id,
 			&data.CryptoData.Value,
@@ -85,6 +92,8 @@ func (c *CryptoOwningRepository) GetBalanceWithTotal(walletId uuid.UUID) (models
 			&data.Quantity,
 			&data.ValuePerQuantity,
 			&rowTotal,
+			&rowMoney,
+			&rowTotalWithCurrency,
 		)
 		if err != nil {
 			fmt.Printf("ERROR_VALUE_QUANTITY_SCAN: %v \n", err)
@@ -93,9 +102,15 @@ func (c *CryptoOwningRepository) GetBalanceWithTotal(walletId uuid.UUID) (models
 		if total == 0 {
 			total = rowTotal
 		}
+		if money == 0 {
+			money = rowMoney
+		}
+		if totalWithCurrency == 0 {
+			totalWithCurrency = rowTotalWithCurrency
+		}
 		valuesAndQuantities = append(valuesAndQuantities, data)
 	}
-	result := models.CryptoBalance{CryptoDataQuantity: valuesAndQuantities, Total: total}
+	result := models.CryptoBalance{CryptoDataQuantity: valuesAndQuantities, Total: total, Money: money, TotalWithCurrency: totalWithCurrency}
 
 	return result, nil
 }

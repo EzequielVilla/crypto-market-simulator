@@ -13,6 +13,8 @@ type CryptoDataQuantityValues struct {
 type CryptoBalance struct {
 	CryptoDataQuantity []CryptoDataQuantityValues `json:"cryptoDataQuantity"`
 	Total              float64                    `json:"total"`
+	Money              float64                    `json:"money"`
+	TotalWithCurrency  float64                    `json:"totalWithCurrency"`
 }
 
 type CryptosOwningDTO struct {
